@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+:root {
+  --background: #171717;
+  --foreground:  #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background-color: white;
+  color: black;
+  font-family: var(--font-sans);
+}
+
+
+
+
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/Helvetica-Neue/HelveticaNeue-Light.otf') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/Helvetica-Neue/HelveticaNeue-Medium.otf') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue';
+  src: url('/Helvetica-Neue/HelveticaNeue-Bold.otf') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* body {
+  background-color: black;
+  font-family: 'Montserrat', sans-serif;
+} */
+
+/* The .jodit-container.jodit_theme_dark ensures it only applies when the dark theme is active */
+.jodit-container.jodit_theme_dark .jodit-workplace,
+.jodit-container.jodit_theme_dark .jodit-wysiwyg {
+  background-color: #000000 !important; /* Matches your 'dark-bg' color */
+  color: #ffffff !important;
+  padding: 20px;
+
+  border: none;
+  /* Ensure text remains white */
+}
+
+.jodit-container.jodit_theme_dark .jodit-toolbar__box {
+  background-color: #000000 !important;
+  border: none;
+
+  padding-bottom: 0px;
+
+  /* Matches your 'dark-bg' color */
+}
+
+/* styles/globals.css */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.promotion-btn {
+  display: flex;
+  height: 31.5px;
+  padding: 0px 13px 0px 2px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}

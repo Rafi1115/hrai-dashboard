@@ -1,0 +1,5 @@
+.chart-container {
+  background: linear-gradient(to top, #1e1e1e 0%, #3b3b3b 100%);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}

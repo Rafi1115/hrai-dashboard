@@ -9,11 +9,11 @@ export default function Topbar({ onBellClick, adminInfo }) {
   const router = useRouter();
 
   const handleBellClick = () => {
-    router.push("/dashboard/admin/notifications"); // Navigate to the notifications page
+    router.push("/admin/notifications"); // Navigate to the notifications page
   };
 
   const handleUserImageClick = () => {
-    router.push("/dashboard/admin/profile"); // Navigate to the profile page
+    router.push("/admin/profile"); // Navigate to the profile page
   };
 
   return (

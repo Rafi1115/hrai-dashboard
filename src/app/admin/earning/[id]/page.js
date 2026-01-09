@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { getApiUrl } from "@/components/configs/api";
+import { getAuthConfig } from "@/components/configs/tokenManager";
+ // Import the auth helper
 
 // Enhanced Avatar component that prioritizes real user images
 function UserAvatar({ src, alt, name }) {
@@ -71,13 +73,14 @@ function UserAvatar({ src, alt, name }) {
 }
 
 export default function UserDetailsPage({ params }) {
+  // Unwrap the params Promise using React.use()
+  const unwrappedParams = React.use(params);
+  const userId = unwrappedParams.id;
+
   // Mock router for back functionality
   const router = {
     back: () => window.history.back(),
   };
-
-  // The user ID is retrieved from the URL parameters.
-  const userId = params.id;
 
   // State for user data, loading, and error handling.
   const [user, setUser] = useState(null);
@@ -87,8 +90,10 @@ export default function UserDetailsPage({ params }) {
     async function fetchSubscriptionDetails() {
       setLoading(true);
       try {
+        // Use getAuthConfig to include authentication headers
         const response = await axios.get(
-          getApiUrl("/api/dashboard/subscriptions/?search&plan_type&page")
+          getApiUrl("/api/dashboard/subscriptions/?search&plan_type&page"),
+          getAuthConfig() // Add authentication configuration
         );
 
         const subscriptions = response.data.results;
@@ -105,7 +110,14 @@ export default function UserDetailsPage({ params }) {
           setUser(null);
         }
       } catch (err) {
-        toast.error("Could not fetch user details.");
+        // Better error handling for authentication errors
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          toast.error("Authentication failed. Please login again.");
+          // Optionally redirect to login page
+          // window.location.href = '/login';
+        } else {
+          toast.error("Could not fetch user details.");
+        }
         console.error("API Fetch Error:", err);
       } finally {
         setLoading(false);
@@ -183,7 +195,7 @@ export default function UserDetailsPage({ params }) {
           {/* User profile image with REAL profile picture from API */}
           <div className="w-32 h-32 rounded-full overflow-hidden shadow-lg mb-6 border-4 border-gray-100 bg-gray-50 flex items-center justify-center">
             <UserAvatar
-              src={user.profile} // Using the real profile picture from API
+              src={user.profile}
               alt={user.subscription_plan_name}
               name={user.subscription_plan_name}
             />
@@ -293,15 +305,10 @@ export default function UserDetailsPage({ params }) {
           <div className="w-full flex gap-4 mt-4">
             <button
               onClick={() => router.back()}
-              className="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold  w-full border border-gray-200 shadow-sm transition-all duration-200 hover:shadow-md"
+              className="px-6 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold w-full border border-gray-200 shadow-sm transition-all duration-200 hover:shadow-md"
             >
               Close
             </button>
-            {/* <button
-              className="px-6 py-3 rounded-lg w-1/2 font-semibold shadow-sm transition-all duration-200 hover:shadow-md bg-blue-500 hover:bg-blue-600 text-white border border-blue-500"
-            >
-              Edit User
-            </button> */}
           </div>
         </motion.div>
       </motion.div>

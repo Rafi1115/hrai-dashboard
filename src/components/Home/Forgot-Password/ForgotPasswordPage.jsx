@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import hrLogo from '../../../../public/side-bar-logo.png'
 import { getApiUrl } from "@/components/configs/api";
 
+
  // Import API configuration
 
 export default function ForgotPasswordFlow() {

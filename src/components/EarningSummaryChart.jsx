@@ -10,11 +10,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { getApiUrl } from "./configs/api";
+import { getAuthConfig, isAuthenticated } from "./configs/tokenManager";
 
 const EarningOverviewChart = () => {
   // State for chart data, loading state, and dropdown functionality.
   const [currentEarningData, setCurrentEarningData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Dynamic years - current year + last 4 years
@@ -32,11 +34,36 @@ const EarningOverviewChart = () => {
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
 
   useEffect(() => {
-    // We use a self-invoking async function to fetch the data from the new API.
+    // Fetch data with year parameter
     async function fetchEarningData() {
+      // Check authentication first
+      if (!isAuthenticated()) {
+        setError('Authentication required');
+        setLoading(false);
+        // Use fallback data if not authenticated
+        const fallbackData = [
+          "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        ].map(month => ({
+          month,
+          height: 0,
+          value: 0,
+          active: false,
+        }));
+        setCurrentEarningData(fallbackData);
+        return;
+      }
+
       setLoading(true);
+      setError(null);
+
       try {
-        const response = await axios.get(getApiUrl("/api/dashboard/overview/"));
+        // Add year parameter to API call for real-time filtering
+        const response = await axios.get(
+          getApiUrl(`/api/dashboard/overview/?year=${selectedYear}`),
+          getAuthConfig()
+        );
+        
         const apiData = response.data.data;
         const monthlyDataFromApi = apiData.monthly_data;
 
@@ -50,35 +77,17 @@ const EarningOverviewChart = () => {
           active: item.earnings > 0,
         }));
 
-        // The API provides data for current year. To simulate data for other years,
-        // we'll scale the fetched data based on the selected year
-        let finalData = mappedData;
-        const currentYear = getCurrentYear();
-        
-        if (selectedYear !== currentYear) {
-          const yearDifference = currentYear - selectedYear;
-          let scaleFactor = 1;
-          
-          if (yearDifference > 0) {
-            // Past years - scale down progressively
-            scaleFactor = Math.max(0.3, 1 - (yearDifference * 0.2));
-          } else {
-            // Future years - scale up
-            scaleFactor = 1 + (Math.abs(yearDifference) * 0.1);
-          }
-          
-          finalData = mappedData.map(item => ({
-            ...item,
-            height: Math.max(0, item.height * scaleFactor),
-            value: Math.max(0, item.value * scaleFactor),
-            // For past years, reduce the chance of active months
-            active: yearDifference > 0 ? (item.earnings > 0 && Math.random() > 0.3) : item.earnings > 0,
-          }));
-        }
-
-        setCurrentEarningData(finalData);
+        setCurrentEarningData(mappedData);
       } catch (error) {
         console.error("Error fetching earning data:", error);
+        
+        // Handle authentication errors
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          setError('Session expired. Please login again.');
+        } else {
+          setError('Failed to load earning data. Showing fallback data.');
+        }
+        
         // Fallback to empty data structure if API fails
         const fallbackData = [
           "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -194,6 +203,13 @@ const EarningOverviewChart = () => {
           </div>
         </div>
 
+        {/* Error message if any */}
+        {error && (
+          <div className="w-full px-3 py-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-xs">
+            {error}
+          </div>
+        )}
+
         {/* Chart Section */}
         <div className="self-stretch flex flex-col justify-start items-start gap-[5px]">
           <div className=" flex items-center gap-4 relative w-full">
@@ -210,7 +226,12 @@ const EarningOverviewChart = () => {
           >
             {/* Show a loading message if data is being fetched */}
             {loading ? (
-              <div className="flex items-center justify-center h-full text-gray-500">Loading chart data...</div>
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-gray-300 border-t-[#013D3B] rounded-full animate-spin"></div>
+                  Loading chart data...
+                </div>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart

@@ -6,6 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { getApiUrl } from "../configs/api";
+import { getAuthConfig, isAuthenticated } from "../configs/tokenManager";
+// Import token manager
+
 
 // Enhanced AvatarImage component that handles real user images with fallback
 function AvatarImage({ src, alt, name }) {
@@ -102,9 +105,21 @@ function UserList() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [userToUpdate, setUserToUpdate] = useState(null);
 
-  // API Data Fetching Logic
-  // Updated to handle user profile pictures from API response
+  // Check authentication on mount
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      toast.error("Please login to continue");
+      router.push("/"); // Redirect to login page
+    }
+  }, [router]);
+
+  // API Data Fetching Logic with Authentication
   const fetchUsers = useCallback(async () => {
+    if (!isAuthenticated()) {
+      toast.error("Authentication required");
+      return;
+    }
+
     setLoading(true);
     const API_URL = getApiUrl("/api/dashboard/users/overview/");
 
@@ -119,7 +134,9 @@ function UserList() {
     if (filterYear !== "All") params.append("year", filterYear);
 
     try {
-      const response = await axios.get(API_URL, { params });
+      // Use getAuthConfig to add authentication headers
+      const response = await axios.get(API_URL, getAuthConfig({ params }));
+      
       // Updated data mapping to include profile picture
       let formattedUsers = response.data.results.map((user) => ({
         id: user.id,
@@ -145,13 +162,21 @@ function UserList() {
       setPrevPage(response.data.previous);
     } catch (error) {
       console.error("Failed to fetch users:", error);
-      toast.error("Could not fetch user data.");
+      
+      // Handle authentication errors
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error("Session expired. Please login again.");
+        router.push("/");
+      } else {
+        toast.error("Could not fetch user data.");
+      }
+      
       setUsers([]);
       setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, [search, userType, filterMonth, filterYear, page, pageSize]);
+  }, [search, userType, filterMonth, filterYear, page, pageSize, router]);
 
   // useEffect to call fetchUsers with debounce for search
   useEffect(() => {
@@ -208,15 +233,23 @@ function UserList() {
     toast.success(`Navigating to details for ${user.customer.name}`);
   };
 
-  // --- 🚀 UPDATED: Block/Unblock Handler ---
-  // This function now uses the specific block-unblock endpoint
+  // Block/Unblock Handler with Authentication
   const handleBlockUnblock = async (user) => {
     if (!user) return;
+    
+    if (!isAuthenticated()) {
+      toast.error("Authentication required");
+      return;
+    }
+
     const toastId = toast.loading(`Updating status for ${user.customer.name}...`);
     try {
       const UPDATE_URL = getApiUrl(`/api/dashboard/users/${user.id}/block-unblock/`);
       const action = user.status === "Active" ? "block" : "unblock";
-      const res = await axios.post(UPDATE_URL, { action });
+      
+      // Use getAuthConfig to add authentication headers
+      const res = await axios.post(UPDATE_URL, { action }, getAuthConfig());
+      
       if (res.status === 200 && res.data) {
         const apiMessage = res.data.message || "Status updated.";
         toast.success(apiMessage, { id: toastId });
@@ -231,7 +264,14 @@ function UserList() {
       }
     } catch (error) {
       console.error("Failed to update user status:", error);
-      toast.error(`Failed to update ${user.customer.name}.`, { id: toastId });
+      
+      // Handle authentication errors
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        toast.error("Session expired. Please login again.", { id: toastId });
+        router.push("/login");
+      } else {
+        toast.error(`Failed to update ${user.customer.name}.`, { id: toastId });
+      }
     } finally {
       setShowConfirmation(false);
       setUserToUpdate(null);

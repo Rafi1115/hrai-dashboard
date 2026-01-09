@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getApiUrl } from './configs/api';
+import { getAuthConfig, isAuthenticated } from './configs/tokenManager';
+ // Import token manager
 
 // Client component for avatar image with fallback
 function AvatarImage({ src, alt, fallbackText }) {
@@ -26,17 +28,32 @@ const RecentSubscribersAndProducts = () => {
   const [recentSubscribers, setRecentSubscribers] = useState([]);
   const [recentProducts, setRecentProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // States to manage whether to show all items or limited list
   const [showAllSubscribers, setShowAllSubscribers] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
 
-  // Fetch data from API
+  // Fetch data from API with authentication
   useEffect(() => {
     async function fetchData() {
+      // Check authentication first
+      if (!isAuthenticated()) {
+        setError('Please login to view this data');
+        setLoading(false);
+        router.push('/login');
+        return;
+      }
+
       setLoading(true);
+      setError(null);
+
       try {
-        const response = await axios.get(getApiUrl("/api/dashboard/overview/"));
+        // Use getAuthConfig to add authentication headers
+        const response = await axios.get(
+          getApiUrl("/api/dashboard/overview/"),
+          getAuthConfig()
+        );
         const apiData = response.data.data;
 
         // Map recent subscribers from API
@@ -64,7 +81,16 @@ const RecentSubscribersAndProducts = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
         
-        // Fallback data if API fails
+        // Handle authentication errors
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          setError('Session expired. Please login again.');
+          router.push('/login');
+          return;
+        }
+        
+        // For other errors, use fallback data
+        setError('Failed to load data. Showing fallback content.');
+        
         setRecentSubscribers([
           {
             id: 1,
@@ -106,14 +132,14 @@ const RecentSubscribersAndProducts = () => {
     }
 
     fetchData();
-  }, []);
+  }, [router]);
 
   const handleSubscriber = () => {
     router.push("/admin/earning");
   };
 
   const handleProduct = () => {
-    router.push("/admin/products");
+    router.push("/admin/affiliate-management");
   };
 
   // Toggle functions
@@ -133,10 +159,16 @@ const RecentSubscribersAndProducts = () => {
     return (
       <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="w-full px-6 py-6 bg-white rounded-lg shadow-xl flex items-center justify-center">
-          <div className="text-gray-500">Loading subscribers...</div>
+          <div className="flex items-center gap-2 text-gray-500">
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+            Loading subscribers...
+          </div>
         </div>
         <div className="w-full px-6 py-6 bg-white rounded-lg shadow-xl flex items-center justify-center">
-          <div className="text-gray-500">Loading products...</div>
+          <div className="flex items-center gap-2 text-gray-500">
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-purple-500 rounded-full animate-spin"></div>
+            Loading products...
+          </div>
         </div>
       </div>
     );
@@ -144,6 +176,13 @@ const RecentSubscribersAndProducts = () => {
 
   return (
     <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Error message if any */}
+      {error && (
+        <div className="col-span-full px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800 text-sm">{error}</p>
+        </div>
+      )}
+
       {/* Recent Subscribers Card */}
       <div className="w-full px-6 py-6 bg-white rounded-lg shadow-xl flex flex-col justify-start items-start gap-3">
         {/* Card Title */}

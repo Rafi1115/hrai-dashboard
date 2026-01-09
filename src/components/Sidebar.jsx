@@ -32,13 +32,13 @@ const navItems = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   {
     name: "User Management",
-    href: "/dashboard/admin/user-list",
+    href: "/admin/user-list",
     icon: Users,
   },
 
   {
     name: "Subscription  Overview",
-    href: "/dashboard/admin/earning",
+    href: "/admin/earning",
     icon: (props) => (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -66,16 +66,16 @@ const navItems = [
 
   {
     name: "Affiliate  Management",
-    href: "/dashboard/admin/affiliate-management",
+    href: "/admin/affiliate-management",
     icon: FileVideo,
   },
   {
     name: "Notifications",
-    href: "/dashboard/admin/notifications",
+    href: "/admin/notifications",
     icon: Bell,
   },
 
-  { name: "Settings", href: "/dashboard/admin/settings", icon: Settings },
+  { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 const Sidebar = ({ isOpen, setIsOpen, adminInfo }) => {

@@ -5,6 +5,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { getApiUrl } from "../configs/api";
+import { getAuthConfig, isAuthenticated } from "../configs/tokenManager";
+ // Import token manager
 
 // =========================================================================
 // 1. Constants and Configuration
@@ -31,6 +33,8 @@ export default function EarningsTable() {
   const [searchQuery, setSearchQuery] = useState("");
   const [planFilter, setPlanFilter] = useState("All");
 
+  const router = useRouter();
+
   // =========================================================================
   // 3. Data Fetching Logic (with exponential backoff for retries)
   // We use useCallback to memoize this function. This is crucial because
@@ -38,6 +42,14 @@ export default function EarningsTable() {
   // would cause an infinite loop in the useEffect hook below.
   // =========================================================================
   const fetchSubscriptions = useCallback(async () => {
+    // Check authentication first
+    if (!isAuthenticated()) {
+      setError('Authentication required. Please login.');
+      setLoading(false);
+      router.push('/');
+      return;
+    }
+
     // Start the loading state and clear previous errors.
     setLoading(true);
     setError(null);
@@ -60,7 +72,8 @@ export default function EarningsTable() {
 
     while (retries < maxRetries) {
       try {
-        const response = await axios.get(API_URL, { params });
+        // Use getAuthConfig to add authentication headers
+        const response = await axios.get(API_URL, getAuthConfig({ params }));
         setData(response.data.results);
         setTotalCount(response.data.count);
         // Set the dynamic total earnings from API response
@@ -68,6 +81,14 @@ export default function EarningsTable() {
         setLoading(false);
         return; // Success, exit the loop
       } catch (err) {
+        // Handle authentication errors immediately
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          setError("Session expired. Please login again.");
+          setLoading(false);
+          router.push('/');
+          return;
+        }
+
         retries++;
         console.error(`Attempt ${retries} failed to fetch data.`);
         if (retries < maxRetries) {
@@ -81,7 +102,7 @@ export default function EarningsTable() {
         }
       }
     }
-  }, [currentPage, searchQuery, planFilter]); // The dependencies for useCallback.
+  }, [currentPage, searchQuery, planFilter, router]); // The dependencies for useCallback.
 
   // =========================================================================
   // 4. useEffect Hook
@@ -123,8 +144,6 @@ export default function EarningsTable() {
     }
     return "Unknown";
   };
-
-  const router = useRouter();
 
   // The view details functionality is a good example of how you can redirect
   // to a new page. Since this is a self-contained component, we'll just

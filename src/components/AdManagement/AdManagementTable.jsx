@@ -3,44 +3,13 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { PlusIcon, TrashIcon, CheckCircleIcon, XCircleIcon, PencilIcon } from "@heroicons/react/24/outline";
+import { getAuthHeaders } from "../configs/tokenManager";
+ // Import the centralized auth helper
 
 // Real API configuration - Update base_url with your actual domain
 const API_BASE_URL = "https://api.hrlynx.ai/api";
 
-// Helper function to get auth token (from cookies or localStorage)
-const getAuthToken = () => {
-  // First try to get from cookies
-  const cookieToken = document.cookie
-    .split('; ')
-    .find(row => row.startsWith('adminToken='))
-    ?.split('=')[1];
-  
-  // If not in cookies, try localStorage
-  if (cookieToken) return cookieToken;
-  
-  const localToken = localStorage.getItem('token');
-  return localToken;
-};
-
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = getAuthToken();
-  return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
-};
-
-// Helper function to get auth headers for FormData
-const getAuthHeadersForFormData = () => {
-  const token = getAuthToken();
-  return {
-    'Authorization': `Bearer ${token}`,
-    // Don't set Content-Type for FormData - let the browser set it
-  };
-};
-
-// API Functions
+// API Functions - Now using centralized token manager
 const api = {
   // Get categories
   getCategories: async () => {
@@ -62,9 +31,13 @@ const api = {
 
   // Create product
   createProduct: async (formData) => {
+    const authHeaders = getAuthHeaders();
+    // For FormData, we need to remove Content-Type header
+    const headers = { 'Authorization': authHeaders['Authorization'] };
+    
     const response = await fetch(`${API_BASE_URL}/affiliate/admin/products/`, {
       method: 'POST',
-      headers: getAuthHeadersForFormData(),
+      headers: headers,
       body: formData,
     });
     if (!response.ok) throw new Error('Failed to create product');
@@ -73,9 +46,13 @@ const api = {
 
   // Update product
   updateProduct: async (id, formData) => {
+    const authHeaders = getAuthHeaders();
+    // For FormData, we need to remove Content-Type header
+    const headers = { 'Authorization': authHeaders['Authorization'] };
+    
     const response = await fetch(`${API_BASE_URL}/affiliate/admin/products/${id}/`, {
       method: 'PUT',
-      headers: getAuthHeadersForFormData(),
+      headers: headers,
       body: formData,
     });
     if (!response.ok) throw new Error('Failed to update product');
@@ -104,7 +81,7 @@ const api = {
   },
 };
 
-export default function AffiliateProductManagement() {
+export default function AdManagementTable() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -177,7 +154,7 @@ export default function AffiliateProductManagement() {
   const handleSubmit = async () => {
     
     if (!formState.category || !formState.title || !formState.affiliate_url) {
-  toast.error("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -200,11 +177,11 @@ export default function AffiliateProductManagement() {
       if (editingProduct) {
         // Update existing product
         result = await api.updateProduct(editingProduct.id, formData);
-  toast.success("Product updated successfully!");
+        toast.success("Product updated successfully!");
       } else {
         // Create new product
         result = await api.createProduct(formData);
-  toast.success("Product created successfully!");
+        toast.success("Product created successfully!");
       }
 
       // Refresh the products list
@@ -226,7 +203,7 @@ export default function AffiliateProductManagement() {
       if (error.message.includes('Failed to fetch') || error.message.includes('401')) {
         setAuthError(true);
       }
-  toast.error(`Error saving product: ${error.message}`);
+      toast.error(`Error saving product: ${error.message}`);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -273,24 +250,6 @@ export default function AffiliateProductManagement() {
         </div>
       </span>
     ), { duration: 8000 });
-    return;
-
-    try {
-      setLoading(true);
-      await api.deleteProduct(id);
-  // toast handled in confirmation above
-      
-      // Refresh the products list
-      await fetchProducts();
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      if (error.message.includes('Failed to fetch') || error.message.includes('401')) {
-        setAuthError(true);
-      }
-  // toast handled in confirmation above
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleToggleActive = async (id) => {
@@ -299,7 +258,7 @@ export default function AffiliateProductManagement() {
       const newStatus = !product.is_active;
       
       await api.toggleProductStatus(id, newStatus);
-  toast.success("Product status updated!");
+      toast.success("Product status updated!");
       
       // Refresh the products list
       await fetchProducts();
@@ -308,7 +267,7 @@ export default function AffiliateProductManagement() {
       if (error.message.includes('Failed to fetch') || error.message.includes('401')) {
         setAuthError(true);
       }
-  toast.error(`Error updating product status: ${error.message}`);
+      toast.error(`Error updating product status: ${error.message}`);
     }
   };
 
@@ -372,12 +331,6 @@ export default function AffiliateProductManagement() {
           {editingProduct ? "Edit Product" : "Add New Product"}
         </h3>
         
-        {/* API Connection Note */}
-        {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm">
-          <p className="text-blue-800">
-            ✅ Bearer token authentication added to all API calls
-          </p>
-        </div> */}
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Category Dropdown */}

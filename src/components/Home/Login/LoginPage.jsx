@@ -5,6 +5,8 @@ import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import hrLogo from '../../../../public/side-bar-logo.png'
 import { getApiUrl } from "@/components/configs/api";
+import Link from "next/link";
+
  // Import API configuration
 
 export default function LoginPage() {
@@ -253,7 +255,7 @@ export default function LoginPage() {
         }
 
         // Always redirect to admin dashboard
-        window.location.href = "/dashboard/admin";
+        window.location.href = "/admin";
       } else {
         // Login failed
         console.error("Login failed:", data);
@@ -471,12 +473,12 @@ export default function LoginPage() {
                     </span>
                   </label>
                   {/* Updated link color to match button color */}
-                  <a
-                    href="/dashboard/Forgot-Password"
+                  <Link
+                    href="/Forgot-Password"
                     className="text-[#013D3B] text-xs font-normal font-[Inter] hover:underline"
                   >
                     Forgot Password?
-                  </a>
+                  </Link>
                 </div>
 
                 {error && (

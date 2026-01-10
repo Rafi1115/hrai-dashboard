@@ -6,6 +6,8 @@ import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { getApiUrl } from '../configs/api';
+import { getAuthHeaders } from '../configs/tokenManager';
+ // Import auth headers
 
 // Use a dynamic import for the JoditEditor to prevent SSR issues.
 const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
@@ -52,8 +54,16 @@ const SettingsPage = ({ onBackClick }) => {
     async function fetchSettings() {
       setIsLoading(true);
       try {
-        const res = await fetch(getApiUrl('/api/dashboard/settings/'));
-        if (!res.ok) throw new Error('Failed to fetch settings from the server.');
+        const res = await fetch(getApiUrl('/api/dashboard/settings/'), {
+          headers: getAuthHeaders(), // Add authentication headers
+        });
+        
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            throw new Error('Authentication failed. Please login again.');
+          }
+          throw new Error('Failed to fetch settings from the server.');
+        }
         
         const data = await res.json();
         
@@ -110,11 +120,16 @@ const SettingsPage = ({ onBackClick }) => {
     try {
       const res = await fetch(endpoint, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          ...getAuthHeaders(), // Add authentication headers
+        },
         body: JSON.stringify({ content: editableContent }),
       });
 
       if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          throw new Error('Authentication failed. Please login again.');
+        }
         // Try to parse error details from the response body for a more specific message.
         const errorData = await res.json().catch(() => ({ detail: `Failed to update ${title}` }));
         throw new Error(errorData.detail || `HTTP error! Status: ${res.status}`);

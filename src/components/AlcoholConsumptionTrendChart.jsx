@@ -14,6 +14,8 @@ import {
 } from 'recharts';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'; // For the arrow icon
 import { getApiUrl } from './configs/api';
+import { getAuthConfig, isAuthenticated } from './configs/tokenManager';
+ // Import token manager
 
 const formatYAxisTick = (value) => {
   if (value === 0) return '0k';
@@ -25,6 +27,7 @@ const formatYAxisTick = (value) => {
 export default function AlcoholConsumptionTrendChart({ title = "Token Overview" }) {
   const [tokenData, setTokenData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Dynamic years - current year + last 4 years
@@ -43,9 +46,38 @@ export default function AlcoholConsumptionTrendChart({ title = "Token Overview" 
 
   useEffect(() => {
     async function fetchTokenData() {
+      // Check authentication first
+      if (!isAuthenticated()) {
+        setError('Authentication required');
+        setLoading(false);
+        // Use fallback data if not authenticated
+        const fallbackData = [
+          { name: 'Jan', consumption: 12000 },
+          { name: 'Feb', consumption: 13500 },
+          { name: 'Mar', consumption: 11000 },
+          { name: 'Apr', consumption: 12000 },
+          { name: 'May', consumption: 10500 },
+          { name: 'Jun', consumption: 11500 },
+          { name: 'Jul', consumption: 12500 },
+          { name: 'Aug', consumption: 11000 },
+          { name: 'Sep', consumption: 10000 },
+          { name: 'Oct', consumption: 12000 },
+          { name: 'Nov', consumption: 14500 },
+          { name: 'Dec', consumption: 13000 },
+        ];
+        setTokenData(fallbackData);
+        return;
+      }
+
       setLoading(true);
+      setError(null);
+
       try {
-        const response = await axios.get(getApiUrl("/api/dashboard/overview/"));
+        // Use getAuthConfig to add authentication headers
+        const response = await axios.get(
+          getApiUrl("/api/dashboard/overview/"),
+          getAuthConfig()
+        );
         const apiData = response.data.data;
         const monthlyTokenDataFromApi = apiData.monthly_token_data;
 
@@ -82,6 +114,14 @@ export default function AlcoholConsumptionTrendChart({ title = "Token Overview" 
         setTokenData(finalData);
       } catch (error) {
         console.error("Error fetching token data:", error);
+        
+        // Handle authentication errors
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          setError('Session expired. Please login again.');
+        } else {
+          setError('Failed to load token data. Showing fallback data.');
+        }
+        
         // Fallback to demo data structure if API fails
         const fallbackData = [
           { name: 'Jan', consumption: 12000 },
@@ -149,10 +189,20 @@ export default function AlcoholConsumptionTrendChart({ title = "Token Overview" 
         </div>
       </div>
 
+      {/* Error message if any */}
+      {error && (
+        <div className="w-full px-3 py-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-xs">
+          {error}
+        </div>
+      )}
+
       <div className="w-full h-56"> {/* Fixed height for the chart */}
         {loading ? (
           <div className="flex items-center justify-center h-full text-gray-500">
-            Loading token data...
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+              Loading token data...
+            </div>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">

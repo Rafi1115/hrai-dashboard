@@ -1,7 +1,7 @@
-// Real API configuration - Update base_url with your actual domain
+
 export const API_BASE_URL = "https://api.hrlynx.ai";
 
-// Helper function to get auth token (from cookies or localStorage)
+
 export const getAuthToken = () => {
   // First try to get from cookies
   const cookieToken = document.cookie

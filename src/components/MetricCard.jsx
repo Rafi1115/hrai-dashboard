@@ -68,17 +68,14 @@ const MetricCard = () => {
     
     return () => clearInterval(interval);
   }, []);
-
   // Format numbers with commas
   const formatNumber = (num) => {
     return num.toLocaleString();
   };
-
   // Format currency
   const formatCurrency = (amount) => {
     return `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
-
   if (loading) {
     return (
       <div className="flex flex-col md:flex-row gap-4 p-4">
@@ -96,7 +93,6 @@ const MetricCard = () => {
       </div>
     );
   }
-
   return (
     <div className="flex flex-col gap-4 p-4">
       {/* Error message if any */}
@@ -119,7 +115,6 @@ const MetricCard = () => {
             <FaCircleDollarToSlot className='w-10 h-10'/>
           </div>
         </div>
-
         {/* Total User Card */}
         <div className="flex-1 bg-white rounded p-6 flex items-center justify-between shadow-xl hover:shadow-2xl transition-shadow duration-300">
           <div>
@@ -145,7 +140,6 @@ const MetricCard = () => {
             <MdGeneratingTokens className='w-10 h-10' />
           </div>
         </div>
-
         {/* Total Affiliate Products Card */}
         <div className="flex-1 bg-white rounded p-6 flex items-center justify-between shadow-xl hover:shadow-2xl transition-shadow duration-300">
           <div>

@@ -14,7 +14,8 @@ const nextConfig = {
       "maintains-usb-bell-with.trycloudflare.com",
       "ui-avatars.com",
       "api.hrlynx.ai",
-      "hrlynx.ai"
+      "hrlynx.ai",
+      "www.hrlynx.ai"
     ],
   },
 };

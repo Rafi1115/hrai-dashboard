@@ -41,8 +41,17 @@ export default function AlcoholConsumptionTrendChart({ title = "Token Overview" 
     return years;
   };
 
-  const [years] = useState(generateYears());
-  const [selectedYear, setSelectedYear] = useState(getCurrentYear().toString());
+  const [years, setYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState("");
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    // Initialize on client side only
+    setIsClient(true);
+    const generatedYears = generateYears();
+    setYears(generatedYears);
+    setSelectedYear(getCurrentYear().toString());
+  }, []);
 
   useEffect(() => {
     async function fetchTokenData() {
@@ -157,22 +166,23 @@ export default function AlcoholConsumptionTrendChart({ title = "Token Overview" 
           {/* The title is now dynamic */}
           <div className="text-black text-xl font-semibold font-['Roboto']">{title}</div>
           {/* Year Dropdown */}
-          <div className="relative ml-4">
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center space-x-2 px-3 py-1 bg-gray-100 border border-gray-300 rounded text-black text-sm font-semibold font-['DM Sans']"
-            >
-              <span>{selectedYear}</span>
-              {isDropdownOpen ? (
-                <ChevronUpIcon className="w-4 h-4 text-gray-600" />
-              ) : (
-                <ChevronDownIcon className="w-4 h-4 text-gray-600" />
-              )}
-            </button>
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-24 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                {years.map((year) => (
-                  <button
+          {isClient && (
+            <div className="relative ml-4">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center space-x-2 px-3 py-1 bg-gray-100 border border-gray-300 rounded text-black text-sm font-semibold font-['DM Sans']"
+              >
+                <span>{selectedYear}</span>
+                {isDropdownOpen ? (
+                  <ChevronUpIcon className="w-4 h-4 text-gray-600" />
+                ) : (
+                  <ChevronDownIcon className="w-4 h-4 text-gray-600" />
+                )}
+              </button>
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-24 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                  {years.map((year) => (
+                    <button
                     key={year}
                     onClick={() => {
                       setSelectedYear(year);
@@ -185,7 +195,8 @@ export default function AlcoholConsumptionTrendChart({ title = "Token Overview" 
                 ))}
               </div>
             )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 

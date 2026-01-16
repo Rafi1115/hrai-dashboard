@@ -240,7 +240,7 @@ useEffect(() => {
                     type="email"
                     id="email"
                     className="shadow appearance-none rounded w-full h-[50px] py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline border border-[#C3C3C3] bg-gray-100 cursor-no-drop"
-                    value={adminInfo?.email}
+                    value={adminInfo?.email || ""}
                     readOnly
                   />
                 </div>

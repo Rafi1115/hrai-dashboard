@@ -10,7 +10,6 @@ export const api = {
     if (!response.ok) throw new Error('Failed to fetch categories');
     return response.json();
   },
-
   // Get all products
   getProducts: async () => {
     const response = await fetch(`${API_BASE_URL}/affiliate/admin/products/`, {

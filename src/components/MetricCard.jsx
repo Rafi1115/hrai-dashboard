@@ -42,10 +42,12 @@ const MetricCard = () => {
 
         // Update state with real-time data from API
         setDashboardData({
+
           totalEarnings: apiData.total_earnings || 0,
           totalUsers: apiData.total_users || 0,
           totalTokens: apiData.total_tokens_used || 0,
           totalProducts: apiData.total_affiliate_products || 0,
+          
         });
       } catch (error) {
         console.error("Error fetching dashboard data:", error);

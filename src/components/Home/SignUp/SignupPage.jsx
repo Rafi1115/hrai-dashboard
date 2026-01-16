@@ -743,7 +743,7 @@ export default function SignupPage() {
                       <span className="text-black text-sm font-normal font-[Inter]">
                         Already have an account?{" "}
                         <Link
-                          href="/dashboard"
+                          href="/"
                           className="text-[#013D3B] hover:underline font-semibold"
                         >
                           Sign In
